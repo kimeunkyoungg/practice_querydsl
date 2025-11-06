@@ -68,4 +68,34 @@ class MemberRepositoryTest {
         assertThat(member.username).isEqualTo("user1")
         assertThat(member.nickname).isEqualTo("유저1")
     }
+
+    @Test
+    fun `findByUsernameOrNickname()`() {
+        val memberList = memberRepository.findByUsernameOrNickname("user1", "유저2")
+        assertThat(memberList.map { it.username }).containsAnyOf("user1", "user2")
+    }
+
+    @Test
+    fun `findQByUsernameOrNickname()`() {
+        val memberList = memberRepository.findByUsernameOrNickname("user1", "유저2")
+        assertThat(memberList.map { it.username }).containsAnyOf("user1", "user2")
+    }
+
+    @Test
+    fun `findCByUsernameAndEitherPasswordOrNickname`() {
+        // select * from member where username = ? and (password = ? or nickname = ?)
+        val members = memberRepository.findCByUsernameAndEitherPasswordOrNickname("admin", "wrong-password", "운영자")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.any { it.username == "admin" && (it.password == "wrong-password" || it.nickname == "운영자") }).isTrue
+    }
+
+    @Test
+    fun `findQByUsernameAndPasswordOrNickname`() {
+        // select * from member where username = ? and (password = ? or nickname = ?)
+        val members = memberRepository.findQByUsernameAndEitherPasswordOrNickname("admin", "wrong-password", "운영자")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.any { it.username == "admin" && (it.password == "wrong-password" || it.nickname == "운영자") }).isTrue
+    }
 }

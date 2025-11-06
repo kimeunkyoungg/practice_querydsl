@@ -42,10 +42,38 @@ class MemberRepositoryImpl(
 
         return jpaQuery
             .selectFrom(member)
-            .where(member.username.eq(username))
-            .where(member.nickname.eq(nickname))
+            .where(
+                member.username.eq(username)
+                    .and(member.nickname.eq(nickname)))
             .fetchOne()
     }
+
+    override fun findQByUsernameAOrNickname(username: String, nickname: String): List<Member>{
+        val member = QMember.member
+
+        return jpaQuery
+            .selectFrom(member)
+            .where(
+                member.username.eq(username)
+                    .or(member.nickname.eq(nickname)))
+            .fetch()
+    }
+
+    override fun findQByUsernameAndEitherPasswordOrNickname(username: String, password: String, nickname: String): List<Member>{
+        val member = QMember.member
+
+        return jpaQuery
+            .selectFrom(member)
+            .where(
+                member.username.eq(username)
+                    .and(
+                        (member.password.eq(password)
+                        .or(member.nickname.eq(nickname)))
+                    )
+            )
+            .fetch()
+    }
+
 
 
 }
