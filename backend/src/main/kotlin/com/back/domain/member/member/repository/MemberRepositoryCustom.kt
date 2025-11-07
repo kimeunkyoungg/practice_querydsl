@@ -1,6 +1,8 @@
 package com.back.domain.member.member.repository
 
 import com.back.domain.member.member.entity.Member
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 
 //이름은 자유지만 관례적으로 Custom을 붙인다.
@@ -12,4 +14,10 @@ interface MemberRepositoryCustom {
     fun findQByUsernameAndNickname(username: String, nickname: String): Member?
     fun findQByUsernameAOrNickname(username: String, nickname: String): List<Member>
     fun findQByUsernameAndEitherPasswordOrNickname(username: String, password: String, nickname: String): List<Member>
+
+    fun findQByNicknameContaining(nickname: String): List<Member>
+    fun findQByNicknameContaining(nickname: String, pageable: Pageable): Page<Member>
+    fun countQByNicknameContaining(nickname: String): Long
+    fun existsQByNicknameContaining(nickname: String): Boolean
+
 }
