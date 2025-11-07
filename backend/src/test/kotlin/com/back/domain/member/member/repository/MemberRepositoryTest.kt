@@ -4,15 +4,15 @@ import com.back.standard.extentions.getOrThrow
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 
+
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
 @Transactional
 class MemberRepositoryTest {
 
@@ -20,9 +20,8 @@ class MemberRepositoryTest {
     private lateinit var memberRepository: MemberRepository
 
     @Test
-    fun `findById()`(){
+    fun `findById()`() {
         val member = memberRepository.findById(1).get()
-
         assertThat(member.id).isEqualTo(1)
     }
 
@@ -100,6 +99,7 @@ class MemberRepositoryTest {
         assertThat(members.any { it.username == "admin" && (it.password == "wrong-password" || it.nickname == "운영자") }).isTrue
     }
 
+
     @Test
     fun `findByNicknameContaining`() {
         val members = memberRepository.findByNicknameContaining("유저")
@@ -120,14 +120,14 @@ class MemberRepositoryTest {
     fun `countByNicknameContaining`() {
         val count = memberRepository.countByNicknameContaining("유저")
 
-        assertThat(count).isEqualTo(3)
+        assertThat(count).isEqualTo(6)
     }
 
     @Test
     fun `countQByNicknameContaining`() {
         val count = memberRepository.countQByNicknameContaining("유저")
 
-        assertThat(count).isEqualTo(3)
+        assertThat(count).isEqualTo(6)
     }
 
     @Test
@@ -150,8 +150,8 @@ class MemberRepositoryTest {
         val page = memberRepository.findByNicknameContaining("유저", pageable)
 
         assertThat(page.content).hasSize(2)
-        assertThat(page.totalElements).isEqualTo(3)
-        assertThat(page.totalPages).isEqualTo(2)
+        assertThat(page.totalElements).isEqualTo(6)
+        assertThat(page.totalPages).isEqualTo(3)
     }
 
     @Test
@@ -160,7 +160,63 @@ class MemberRepositoryTest {
         val page = memberRepository.findQByNicknameContaining("유저", pageable)
 
         assertThat(page.content).hasSize(2)
-        assertThat(page.totalElements).isEqualTo(3)
-        assertThat(page.totalPages).isEqualTo(2)
+        assertThat(page.totalElements).isEqualTo(6)
+        assertThat(page.totalPages).isEqualTo(3)
+    }
+
+    @Test
+    fun `findByNicknameContainingOrderByIdDesc`() {
+        val members = memberRepository.findByNicknameContainingOrderByIdDesc("유저")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.all { it.nickname.contains("유저") }).isTrue
+
+        for (i in 0 until members.size - 1) {
+            assertThat(members[i].id).isGreaterThan(members[i + 1].id)
+        }
+    }
+
+    @Test
+    fun `findQByNicknameContainingOrderByIdDesc`() {
+        val members = memberRepository.findQByNicknameContainingOrderByIdDesc("유저")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.all { it.nickname.contains("유저") }).isTrue
+
+        for (i in 0 until members.size - 1) {
+            assertThat(members[i].id).isGreaterThan(members[i + 1].id)
+        }
+    }
+
+    @Test
+    fun `findByUsernameContaining with Pageable`() {
+
+        val pageable = PageRequest.of(
+            0, 2,
+            Sort.by("id").descending()
+                .and(Sort.by("username").ascending())
+                .and(Sort.by("nickname").descending())
+        )
+
+        val page = memberRepository.findByUsernameContaining("user", pageable)
+
+        for (i in 0 until page.content.size - 1) {
+            assertThat(page.content[i].id).isGreaterThan(page.content[i + 1].id)
+        }
+    }
+
+    @Test
+    fun `findQByUsernameContaining with Pageable`() {
+        val pageable = PageRequest.of(
+            0, 2,
+            Sort.by("id").descending()
+                .and(Sort.by("username").ascending())
+                .and(Sort.by("nickname").descending())
+        )
+        val page = memberRepository.findQByUsernameContaining("user", pageable)
+
+        for (i in 0 until page.content.size - 1) {
+            assertThat(page.content[i].id).isGreaterThan(page.content[i + 1].id)
+        }
     }
 }

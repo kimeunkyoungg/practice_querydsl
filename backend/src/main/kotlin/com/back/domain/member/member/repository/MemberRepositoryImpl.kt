@@ -2,6 +2,8 @@ package com.back.domain.member.member.repository
 
 import com.back.domain.member.member.entity.Member
 import com.back.domain.member.member.entity.QMember
+import com.back.standard.enum.MemberSearchKeywordType
+import com.querydsl.core.BooleanBuilder
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -140,6 +142,86 @@ class MemberRepositoryImpl(
                 .select(member.count())
                 .from(member)
                 .where(member.nickname.contains(nickname))
+                .fetchOne() ?: 0L
+        }
+    }
+
+    override fun findQByNicknameContainingOrderByIdDesc(nickname: String): List<Member> {
+        val member = QMember.member
+
+        return jpaQuery
+            .selectFrom(member)
+            .where(
+                member.nickname.contains(nickname)
+            )
+            .orderBy(member.id.desc())
+            .fetch()
+    }
+
+    override fun findQByUsernameContaining(username: String, pageable: Pageable): Page<Member>{
+
+        val member = QMember.member
+
+        val query = jpaQuery
+            .selectFrom(member)
+            .where(member.username.contains(username))
+
+        pageable.sort.forEach { order ->
+            when(order.property){
+                "id" -> query.orderBy(if (order.isAscending) member.id.asc() else member.id.desc())
+                "username" -> query.orderBy(if(order.isAscending) member.username.asc() else member.username.desc())
+                "nickname" -> query.orderBy(if(order.isAscending) member.nickname.asc() else member.nickname.desc())
+            }
+        }
+
+        //content 쿼리
+        val content = query
+            .offset(pageable.offset) //시작
+            .limit(pageable.pageSize.toLong()) //끝
+            .fetch()
+
+        return PageableExecutionUtils.getPage(content, pageable) {
+            jpaQuery
+                .select(member.count())
+                .from(member)
+                .where(member.username.contains(username))
+                .fetchOne() ?: 0L
+        }
+
+    }
+
+    override fun findByKwPaged(kwType: MemberSearchKeywordType, kw: String, pageable: Pageable): Page<Member> {
+
+        val member = QMember.member
+
+        val builder = BooleanBuilder()?.apply {
+            when(kwType){
+                MemberSearchKeywordType.USERNAME -> this.and(member.username.contains(kw)) //and / or 상관 x
+                MemberSearchKeywordType.NICKNAME -> this.and(member.nickname.contains(kw))
+                MemberSearchKeywordType.ALL -> {
+                    this.and(
+                        member.username.contains(kw).or(
+                            member.nickname.contains(kw)
+                        )
+                    )
+                }
+            }
+        }
+
+        val query = jpaQuery
+            .selectFrom(member)
+            .where(builder)
+
+        val content = query
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        return PageableExecutionUtils.getPage(content, pageable) {
+            jpaQuery
+                .select(member.count())
+                .from(member)
+                .where(builder)
                 .fetchOne() ?: 0L
         }
     }

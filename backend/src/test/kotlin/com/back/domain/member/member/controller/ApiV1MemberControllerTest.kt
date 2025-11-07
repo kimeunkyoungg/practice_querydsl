@@ -65,7 +65,7 @@ class ApiV1MemberControllerTest {
             .andExpect(MockMvcResultMatchers.status().isCreated())
             .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("201-1"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.msg").value("회원가입이 완료되었습니다. %s님 환영합니다.".formatted(nickname)))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.memberDto.id").value(6))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.memberDto.id").value(9))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.memberDto.createDate").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.memberDto.modifyDate").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.memberDto.name").value(nickname))
